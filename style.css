@@ -1,0 +1,89 @@
+/* ===== GENERAL LAYOUT ===== */
+body {
+  font-family: Arial, sans-serif;
+  background: #ffffff;
+  padding: 20px;
+  color: #333;
+}
+
+/* ===== TITLE ===== */
+h1 {
+  text-align: center;
+  color: #2c3e50;
+}
+
+/* ===== INPUTS ===== */
+input, select, button {
+  padding: 10px;
+  margin: 5px;
+  border-radius: 6px;
+  border: 1px solid #363636;
+}
+
+/* ===== BUTTON STYLE ===== */
+button {
+  cursor: pointer;
+  background: #6ab4e6;
+  color: white;
+  border: none;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: #335a9d;
+}
+
+/* ===== TASK LIST ===== */
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  background: rgb(197, 197, 197);
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* ===== COMPLETED TASK ===== */
+.done {
+  text-decoration: line-through;
+  color: #b33b2e;
+  opacity: 0.7;
+}
+
+/* ===== NOTIFICATION ===== */
+#notification {
+  background: #2ecc71;
+  color: white;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* ===== HIDDEN ===== */
+.hidden {
+  display: none;
+}
+
+/* ===== FILTER BUTTONS ===== */
+.filter-btn {
+  margin: 5px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  background: #ecf0f1;
+  cursor: pointer;
+}
+
+.filter-btn.active {
+  background: #82cdff;
+  color: white;
+}

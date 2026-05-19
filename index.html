@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Task Manager</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <h1>Task Manager</h1>
+
+  <!-- FORM -->
+  <form id="taskForm">
+    <input type="text" id="taskInput" placeholder="Enter task" required>
+
+    <select id="categorySelect">
+      <option value="General">General</option>
+      <option value="Work">Work</option>
+      <option value="School">School</option>
+    </select>
+
+    <button type="submit">Add Task</button>
+  </form>
+
+  <!-- SEARCH -->
+  <input type="text" id="searchInput" placeholder="Search tasks">
+
+  <!-- FILTER -->
+  <div>
+    <button class="filter-btn" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="active">Active</button>
+    <button class="filter-btn" data-filter="completed">Completed</button>
+  </div>
+
+  <!-- COUNTER -->
+  <p>
+    Total: <span id="totalCount">0</span> |
+    Done: <span id="completedCount">0</span> |
+    Pending: <span id="pendingCount">0</span>
+  </p>
+
+  <!-- NOTIFICATION -->
+  <div id="notification" class="hidden"></div>
+
+  <!-- TASK LIST -->
+  <ul id="taskList"></ul>
+
+  <script src="script.js"></script>
+</body>
+</html>
