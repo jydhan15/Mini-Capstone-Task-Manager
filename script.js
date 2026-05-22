@@ -1,8 +1,56 @@
+const taskForm = document.getElementById("taskForm");
+const taskInput = document.getElementById("taskInput");
+const categorySelect = document.getElementById("categorySelect");
+
+const taskList = document.getElementById("taskList");
+
+const searchInput = document.getElementById("searchInput");
+const filterButtons = document.querySelectorAll(".filter-btn");
+
+const totalCount = document.getElementById("totalCount");
+const completedCount = document.getElementById("completedCount");
+const pendingCount = document.getElementById("pendingCount");
+
+const notification = document.getElementById("notification");
+const loading = document.getElementById("loading");
+const darkToggle = document.getElementById("darkToggle");
+
 let tasks = [];
 let filter = "all";
 let search = "";
+let apiCategories = [];
 
-// ===== ADD TASK =====
+darkToggle.addEventListener("click", () => {
+  document.body.classList.toggle("dark");
+  darkToggle.textContent =
+    document.body.classList.contains("dark")
+      ? "Light Mode"
+      : "Dark Mode";
+});
+
+function setLoading(state) {
+  loading.classList.toggle("hidden", !state);
+}
+
+async function fetchCategories() {
+  try {
+    setLoading(true);
+
+    const res = await fetch("https://jsonplaceholder.typicode.com/todos/1");
+    await res.json();
+
+    apiCategories = ["Work", "Personal", "School", "Shopping", "Health"];
+
+    categorySelect.innerHTML = apiCategories
+      .map(c => `<option value="${c}">${c}</option>`)
+      .join("");
+  } catch (err) {
+    notify("API Error");
+  } finally {
+    setLoading(false);
+  }
+}
+
 taskForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
@@ -10,48 +58,56 @@ taskForm.addEventListener("submit", (e) => {
 
   tasks.push({
     id: Date.now(),
-    text: taskInput.value,
+    text: taskInput.value.trim(),
     completed: false,
-    category: categorySelect.value
+    category: categorySelect.value,
+    timeLeft: 60,
+    timer: null
   });
 
   taskInput.value = "";
+
   render();
   updateCount();
   notify("Task added!");
 });
 
-// ===== RENDER TASKS =====
 function render() {
   taskList.innerHTML = "";
 
-  tasks
-    .filter(t =>
-      (filter === "all" ||
-        (filter === "completed" && t.completed) ||
-        (filter === "active" && !t.completed)) &&
-      t.text.toLowerCase().includes(search.toLowerCase())
-    )
-    .forEach(t => {
-      taskList.innerHTML += `
-        <li>
+  const filtered = tasks.filter(t =>
+    (filter === "all" ||
+      (filter === "active" && !t.completed) ||
+      (filter === "completed" && t.completed)) &&
+    t.text.toLowerCase().includes(search.toLowerCase())
+  );
+
+  filtered.forEach(t => {
+    taskList.innerHTML += `
+      <li>
+        <div>
           <span class="${t.completed ? "done" : ""}" data-id="${t.id}">
-            ${t.text} (${t.category})
+            ${t.text} <small>[${t.category}]</small>
           </span>
 
-          <button data-id="${t.id}" class="doneBtn">
-            ${t.completed ? "Undo" : "Done"}
-          </button>
+          <p>⏱ ${t.timeLeft}s</p>
+        </div>
 
-          <button data-id="${t.id}" class="delBtn">Delete</button>
-        </li>
-      `;
-    });
+        <div>
+          <button class="doneBtn" data-id="${t.id}">Done</button>
+          <button class="delBtn" data-id="${t.id}">Delete</button>
+          <button class="timerBtn" data-id="${t.id}">${t.timer ? "Pause" : "Start"}</button>
+        </div>
+      </li>
+    `;
+  });
 }
 
-// ===== CLICK ACTIONS =====
 taskList.addEventListener("click", (e) => {
   const id = Number(e.target.dataset.id);
+  const task = tasks.find(t => t.id === id);
+
+  if (!task) return;
 
   if (e.target.classList.contains("delBtn")) {
     tasks = tasks.filter(t => t.id !== id);
@@ -59,16 +115,87 @@ taskList.addEventListener("click", (e) => {
   }
 
   if (e.target.classList.contains("doneBtn")) {
-    const task = tasks.find(t => t.id === id);
     task.completed = !task.completed;
     notify("Updated");
+  }
+
+  if (e.target.classList.contains("timerBtn")) {
+    if (task.timer) {
+      clearInterval(task.timer);
+      task.timer = null;
+      notify("Timer paused");
+      render();
+      return;
+    }
+
+    task.timer = setInterval(() => {
+      if (task.timeLeft > 0) {
+        task.timeLeft--;
+        render();
+      } else {
+        clearInterval(task.timer);
+        task.timer = null;
+        notify("Timer finished!");
+      }
+    }, 1000);
   }
 
   render();
   updateCount();
 });
 
-// ===== COUNTER =====
+taskList.addEventListener("click", (e) => {
+  const span = e.target.closest("span");
+  if (!span) return;
+
+  const id = Number(span.dataset.id);
+  const task = tasks.find(t => t.id === id);
+
+  if (!task) return;
+
+  task.completed = !task.completed;
+  render();
+  updateCount();
+});
+
+taskList.addEventListener("dblclick", (e) => {
+  const id = Number(e.target.dataset.id);
+  const task = tasks.find(t => t.id === id);
+
+  if (!task) return;
+
+  const newText = prompt("Edit task:", task.text);
+
+  if (newText && newText.trim()) {
+    task.text = newText.trim();
+    render();
+  }
+});
+
+searchInput.addEventListener("input", debounce((e) => {
+  search = e.target.value;
+  render();
+}, 300));
+
+function debounce(fn, delay) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+filterButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    filter = btn.dataset.filter;
+
+    filterButtons.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    render();
+  });
+});
+
 function updateCount() {
   const done = tasks.filter(t => t.completed).length;
 
@@ -77,21 +204,6 @@ function updateCount() {
   pendingCount.textContent = tasks.length - done;
 }
 
-// ===== SEARCH =====
-searchInput.oninput = (e) => {
-  search = e.target.value;
-  render();
-};
-
-// ===== FILTER =====
-filterButtons.forEach(btn => {
-  btn.onclick = () => {
-    filter = btn.dataset.filter;
-    render();
-  };
-});
-
-// ===== NOTIFICATION =====
 function notify(msg) {
   notification.textContent = msg;
   notification.classList.remove("hidden");
@@ -101,6 +213,10 @@ function notify(msg) {
   }, 1500);
 }
 
-// ===== START =====
-render();
-updateCount();
+async function init() {
+  await fetchCategories();
+  render();
+  updateCount();
+}
+
+init();
